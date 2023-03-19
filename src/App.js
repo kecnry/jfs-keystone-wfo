@@ -114,31 +114,28 @@ function App() {
         currOutTime = null
         return
       }
+      if (rowSplit[2] == '50') {
+        // back FROM lunch
+        currOutTime = prevRowSplit[1]
+
+        outputData = appendOutputData(outputData, currEmpID,
+                                      currInDate, currInTime,
+                                      currOutTime, currCostCtr)
+
+        // start entry for this row
+        currInTime = rowSplit[1]
+        currOutTime = null
+        return
+      }
 
       // copy this row to access for next row
       prevRowSplit = rowSplit
 
       if (currInDate === null) {
-        currInDate = rowSplit[1]
+        currInDate = rowSplit[0]
       }
 
-      /// DEBUG
-      if (false && currEmpID === 'AHH') {
-        console.log(rowSplit)
-      }
-      //// END DEBUG
 
-      if (rowSplit[2] == '50') {
-        // out for lunch
-        currOutTime = rowSplit[1]
-        outputData = appendOutputData(outputData, currEmpID,
-                                      currInDate, currInTime,
-                                      currOutTime, currCostCtr)
-
-        currInTime = null
-        currOutTime = null
-        return
-      }
       if (currInTime === null) {
         currInTime = rowSplit[1]
       }
