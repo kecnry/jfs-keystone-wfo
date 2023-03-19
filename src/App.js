@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import {useDropzone} from 'react-dropzone';
 import xlsx from 'node-xlsx';
 
 
@@ -7,6 +8,29 @@ import './App.css';
 
 
 function App() {
+  const onDrop = useCallback((acceptedFiles) => {
+    acceptedFiles.forEach((file) => {
+      const reader = new FileReader()
+
+      reader.onabort = () => console.log('file reading was aborted')
+      reader.onerror = () => console.log('file reading has failed')
+      reader.onload = () => {
+      // Do whatever you want with the file contents
+        parseInput(reader.result)
+      }
+      reader.readAsArrayBuffer(file)
+    })
+
+  }, [])
+
+  const {acceptedFiles, getRootProps, getInputProps} = useDropzone({onDrop});
+
+  const files = acceptedFiles.map(file => (
+    <li key={file.path}>
+      {file.path} - {file.size} bytes
+    </li>
+  ));
+
   const [inputData, setInputData] = useState([]);
   const [showInputData, setShowInputData] = useState(false);
   const [outputData, setOutputData] = useState([]);
@@ -23,56 +47,39 @@ function App() {
     return outputData
   }
 
-  function parseInput(e) {
-    //console.log("parseInput...")
-    const file = e.target.files[0];
-    file.arrayBuffer().then((buffer) => {
-      const inputData = xlsx.parse(buffer)[0].data
-      // data is an ARRAY (spreadsheet rows, with each being an array containing a single string)
-      //console.log(inputData)
-      setInputData(inputData)
+  function outputCss() {
+    var output = 'Employee Id,Pay Date,In Date,Time In,Time Out,Total Time,Time Off,Cost Center2,Note\n'
+    outputData.forEach(row =>
+      output += row.empID+","+"???"+","+row.inDate+","+row.inTime+","+row.outTime+","+row.totTime+","+"???"+","+row.costCtr+',imported from Keystone\n'
+    )
+    return output
+  }
 
-      var currCostCtr = null
-      var currEmpID = null
-      var currInDate = null
-      var currInTime = null
-      var currOutTime = null
-      var rowSplit = []
-      var prevRowSplit = []
-      var outputData = []
-      inputData.forEach((row, i) => {
-        rowSplit = row[0].trimStart().split(' ').filter(v => v.length > 0)
-        if (['JAVA', 'BATAVIA,', 'Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
-          // header/unused lines
-          return
-        }
+  function parseInput(dataBuffer) {
+    const inputData = xlsx.parse(dataBuffer)[0].data
+    // data is an ARRAY (spreadsheet rows, with each being an array containing a single string)
+    //console.log(inputData)
+    setInputData(inputData)
 
-        if (rowSplit[0].slice(1).startsWith('SVC')) {
-          // beginning of a new employee
-          if (currEmpID !== null) {
-            // close out end-of-day of previous employee
-            currOutTime = prevRowSplit[1]
+    var currCostCtr = null
+    var currEmpID = null
+    var currInDate = null
+    var currInTime = null
+    var currOutTime = null
+    var rowSplit = []
+    var prevRowSplit = []
+    var outputData = []
+    inputData.forEach((row, i) => {
+      rowSplit = row[0].trimStart().split(' ').filter(v => v.length > 0)
+      if (['JAVA', 'BATAVIA,', 'Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
+        // header/unused lines
+        return
+      }
 
-            outputData = appendOutputData(outputData, currEmpID,
-                                          currInDate, currInTime,
-                                          currOutTime, currCostCtr)
-
-            // start entry for this row
-            currOutTime = null
-          }
-          currCostCtr = rowSplit[0]
-          currEmpID = rowSplit[1]
-          // cannot count from start since employees have variable number of spaces
-          currInDate = rowSplit[rowSplit.length - 3]
-          currInTime = rowSplit[rowSplit.length - 2]
-          //console.log(currEmpID+': new employee')
-          //console.log(rowSplit)
-          return
-        }
-
-        if (currInDate !== null && rowSplit[0] !== currInDate) {
-          // beginning of a new day, log last out time
-          //console.log(currEmpID+' new date detected '+currInDate+' > '+rowSplit[0])
+      if (rowSplit[0].slice(1).startsWith('SVC')) {
+        // beginning of a new employee
+        if (currEmpID !== null) {
+          // close out end-of-day of previous employee
           currOutTime = prevRowSplit[1]
 
           outputData = appendOutputData(outputData, currEmpID,
@@ -80,43 +87,64 @@ function App() {
                                         currOutTime, currCostCtr)
 
           // start entry for this row
-          currInDate = rowSplit[0]
-          currInTime = rowSplit[1]
           currOutTime = null
-          return
         }
+        currCostCtr = rowSplit[0]
+        currEmpID = rowSplit[1]
+        // cannot count from start since employees have variable number of spaces
+        currInDate = rowSplit[rowSplit.length - 3]
+        currInTime = rowSplit[rowSplit.length - 2]
+        //console.log(currEmpID+': new employee')
+        //console.log(rowSplit)
+        return
+      }
 
-        // copy this row to access for next row
-        prevRowSplit = rowSplit
+      if (currInDate !== null && rowSplit[0] !== currInDate) {
+        // beginning of a new day, log last out time
+        //console.log(currEmpID+' new date detected '+currInDate+' > '+rowSplit[0])
+        currOutTime = prevRowSplit[1]
 
-        if (currInDate === null) {
-          currInDate = rowSplit[1]
-        }
+        outputData = appendOutputData(outputData, currEmpID,
+                                      currInDate, currInTime,
+                                      currOutTime, currCostCtr)
 
-        /// DEBUG
-        if (false && currEmpID === 'AHH') {
-          console.log(rowSplit)
-        }
-        //// END DEBUG
+        // start entry for this row
+        currInDate = rowSplit[0]
+        currInTime = rowSplit[1]
+        currOutTime = null
+        return
+      }
 
-        if (rowSplit[2] == '50') {
-          // out for lunch
-          currOutTime = rowSplit[1]
-          outputData = appendOutputData(outputData, currEmpID,
-                                        currInDate, currInTime,
-                                        currOutTime, currCostCtr)
+      // copy this row to access for next row
+      prevRowSplit = rowSplit
 
-          currInTime = null
-          currOutTime = null
-          return
-        }
-        if (currInTime === null) {
-          currInTime = rowSplit[1]
-        }
-      })
-      //console.log(outputData)
-      setOutputData(outputData)
+      if (currInDate === null) {
+        currInDate = rowSplit[1]
+      }
+
+      /// DEBUG
+      if (false && currEmpID === 'AHH') {
+        console.log(rowSplit)
+      }
+      //// END DEBUG
+
+      if (rowSplit[2] == '50') {
+        // out for lunch
+        currOutTime = rowSplit[1]
+        outputData = appendOutputData(outputData, currEmpID,
+                                      currInDate, currInTime,
+                                      currOutTime, currCostCtr)
+
+        currInTime = null
+        currOutTime = null
+        return
+      }
+      if (currInTime === null) {
+        currInTime = rowSplit[1]
+      }
     })
+    //console.log(outputData)
+    setOutputData(outputData)
   }
   function toggleShowInputData() {
     setShowInputData(!showInputData)
@@ -126,28 +154,22 @@ function App() {
   }
   return (
     <div className="App">
-      <input
-        type="file"
-        onInput={(e) => parseInput(e)}
-      />
-      <div>
-        <button type="button" onClick={toggleShowInputData}>
-          Input Data: {inputData.length} rows
-        </button>
-        <div style={{textAlign: 'left', display: showInputData ? 'block' : 'none'}}>
-          {inputData.map((row) => {return (<div>{row}</div>)})}
+      {files.length == 0 ?
+        <div {...getRootProps({className: 'dropzone'})}>
+          <input {...getInputProps()} />
+          <p style={{position: 'absolute', top: '30%', width: '100%'}}>
+            Drag and Drop Keystone xlsx file or click to open file dialog
+          </p>
         </div>
-      </div>
+        :
+        <div style={{position: 'absolute', paddingTop: '30%', width: '100%', backgroundColor: '#d9f1d9'}}>
+          <a href={"data:application/css;charset=utf-8,"+outputCss()} download="wfo_import.csv">Download WFO csv file</a>
+          <p>or refresh page to import new file</p>
+          <h3 style={{textAlign: 'left'}}>Output csv preview</h3>
+          <div style={{whiteSpace: 'pre', textAlign: 'left'}}>{outputCss()}</div>
+        </div>
+      }
 
-      <div>
-        <button type="button" onClick={toggleShowOutputData}>
-          Output Data: {outputData.length} rows
-        </button>
-        <div style={{textAlign: 'left', display: showOutputData ? 'block' : 'none'}}>
-          <div>Employee Id,Pay Date,In Date,Time In,Time Out,Total Time,Time Off,Cost Center2,Note</div>
-          {outputData.map((dict) => {return (<div>{dict.empID},???,{dict.inDate},{dict.inTime},{dict.outTime},{dict.totTime},???,{dict.costCtr},imported from Keystone</div>)})}
-        </div>
-      </div>
     </div>
   );
 }
