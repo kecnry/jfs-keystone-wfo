@@ -166,6 +166,7 @@ function App() {
           <div style={{whiteSpace: 'pre', textAlign: 'left'}}>{outputCss()}</div>
         </div>
       }
+      <span style={{position: "absolute", bottom: "0px", right: "0px"}}>version: 2023.03.19</span>
 
     </div>
   );
