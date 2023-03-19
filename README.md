@@ -37,7 +37,7 @@ In the root directory, issue:
 npm run deploy
 ```
 
-will need to provide github username and password (api token) 2-3 times.  This
+will need to provide github username and password (api token with scope for pushing commits) 2-3 times.  This
 will build the website and commit and push to the `gh-pages` branch.  It may take
 a few minutes before those changes then go live.
 
