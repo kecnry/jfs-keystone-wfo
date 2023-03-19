@@ -159,14 +159,14 @@ function App() {
           </p>
         </div>
         :
-        <div style={{position: 'absolute', paddingTop: '30%', width: '100%', backgroundColor: '#d9f1d9'}}>
+        <div style={{position: 'absolute', paddingTop: '20%', width: '100%', backgroundColor: '#d9f1d9'}}>
           <a href={"data:application/css;charset=utf-8,"+outputCss()} download="wfo_import.csv">Download WFO csv file</a>
           <p>or refresh page to import new file</p>
           <h3 style={{textAlign: 'left'}}>Output csv preview</h3>
           <div style={{whiteSpace: 'pre', textAlign: 'left'}}>{outputCss()}</div>
         </div>
       }
-      <span style={{position: "absolute", bottom: "0px", right: "0px"}}>version: 2023.03.19</span>
+      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.19</span>
 
     </div>
   );
