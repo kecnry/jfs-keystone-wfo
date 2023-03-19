@@ -1,23 +1,33 @@
+import { useState } from 'react';
+import xlsx from 'node-xlsx';
+
+
 import logo from './logo.svg';
 import './App.css';
 
+
 function App() {
+  const [rows, setRows] = useState(0);
+
+  function parseInput(e) {
+    console.log("parseInput...")
+    const file = e.target.files[0];
+    file.arrayBuffer().then((buffer) => {
+      const data = xlsx.parse(buffer)[0].data
+      // data is an ARRAY (spreadsheet rows, with each being an array containing a single string)
+      console.log(data)
+      setRows(data.length)
+    })
+  }
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <input
+        type="file"
+        onInput={(e) => parseInput(e)}
+      />
+      <p>
+        Read {rows} rows of data
+      </p>
     </div>
   );
 }
