@@ -36,21 +36,18 @@ function App() {
   const [outputData, setOutputData] = useState([]);
   const [showOutputData, setShowOutputData] = useState(false);
 
-  function appendOutputData(outputData, empID, inDate, inTime, outTime, costCtr) {
-    const totTimeMillisecs = new Date(inDate+' '+outTime) - new Date(inDate+' '+inTime)
+  function appendOutputData(outputData, empID, inDate, inTime, outTime) {
     outputData.push({'empID': empID,
                      'inDate': inDate,
-                     'inTime': inTime,
-                     'outTime': outTime,
-                     'totTime': Math.round(totTimeMillisecs/1000/60/60*100)/100,
-                     'costCtr': costCtr})
+                     'inTime': inTime.slice(0,5),
+                     'outTime': outTime.slice(0,5)})
     return outputData
   }
 
   function outputCss() {
-    var output = 'Employee Id,Pay Date,In Date,Time In,Time Out,Total Time,Time Off,Cost Center2,Note\n'
+    var output = 'Employee Id,Pay Date,In Date,Time In,Time Out,Total Time,Time Off,Cost Center 2,Note\n'
     outputData.forEach(row =>
-      output += row.empID+","+"???"+","+row.inDate+","+row.inTime+","+row.outTime+","+row.totTime+","+"???"+","+row.costCtr+',imported from Keystone\n'
+      output += row.empID+","+row.inDate+","+row.inDate+","+row.inTime+","+row.outTime+",,,,"+',imported from Keystone\n'
     )
     return output
   }
@@ -61,7 +58,6 @@ function App() {
     //console.log(inputData)
     setInputData(inputData)
 
-    var currCostCtr = null
     var currEmpID = null
     var currInDate = null
     var currInTime = null
@@ -84,12 +80,11 @@ function App() {
 
           outputData = appendOutputData(outputData, currEmpID,
                                         currInDate, currInTime,
-                                        currOutTime, currCostCtr)
+                                        currOutTime)
 
           // start entry for this row
           currOutTime = null
         }
-        currCostCtr = rowSplit[0]
         currEmpID = rowSplit[1]
         // cannot count from start since employees have variable number of spaces
         currInDate = rowSplit[rowSplit.length - 3]
@@ -106,7 +101,7 @@ function App() {
 
         outputData = appendOutputData(outputData, currEmpID,
                                       currInDate, currInTime,
-                                      currOutTime, currCostCtr)
+                                      currOutTime)
 
         // start entry for this row
         currInDate = rowSplit[0]
@@ -120,7 +115,7 @@ function App() {
 
         outputData = appendOutputData(outputData, currEmpID,
                                       currInDate, currInTime,
-                                      currOutTime, currCostCtr)
+                                      currOutTime)
 
         // start entry for this row
         currInTime = rowSplit[1]
@@ -166,7 +161,7 @@ function App() {
           <div style={{whiteSpace: 'pre', textAlign: 'left'}}>{outputCss()}</div>
         </div>
       }
-      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.19</span>
+      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.20</span>
 
     </div>
   );
