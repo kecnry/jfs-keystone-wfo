@@ -66,13 +66,17 @@ function App() {
     var prevRowSplit = []
     var outputData = []
     inputData.forEach((row, i) => {
+      if (row[0].indexOf('TIME CLOCK REPORT') !== -1 || row[0].indexOf('PAYROLL DETAIL REPORT') !== -1) {
+        // unused header line
+        return
+      }
       rowSplit = row[0].trimStart().split(' ').filter(v => v.length > 0)
-      if (['JAVA', 'NORTH', 'BATAVIA,', 'Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
+      if (['Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
         // header/unused lines
         return
       }
 
-      if (rowSplit[0].slice(1).startsWith('SVC')) {
+      if (rowSplit[0].slice(1).startsWith('SVC') || rowSplit[0].slice(1).startsWith('OFFC')) {
         // beginning of a new employee
         if (currEmpID !== null) {
           // close out end-of-day of previous employee
