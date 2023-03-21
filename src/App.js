@@ -67,7 +67,7 @@ function App() {
     var outputData = []
     inputData.forEach((row, i) => {
       rowSplit = row[0].trimStart().split(' ').filter(v => v.length > 0)
-      if (['JAVA', 'BATAVIA,', 'Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
+      if (['JAVA', 'NORTH', 'BATAVIA,', 'Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
         // header/unused lines
         return
       }
@@ -161,7 +161,7 @@ function App() {
           <div style={{whiteSpace: 'pre', textAlign: 'left'}}>{outputCss()}</div>
         </div>
       }
-      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.20</span>
+      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.21</span>
 
     </div>
   );
