@@ -71,24 +71,22 @@ function App() {
         return
       }
       rowSplit = row[0].trimStart().split(' ').filter(v => v.length > 0)
-      if (['Department:', 'DEPT', 'TOTAL', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
+      if (rowSplit[0] == 'TOTAL') {
+        // close out end-of-day (including last employee)
+        currOutTime = prevRowSplit[1]
+        outputData = appendOutputData(outputData, currEmpID,
+                                      currInDate, currInTime,
+                                      currOutTime)
+        return
+      }
+      if (['Department:', 'DEPT', 'REPORT'].indexOf(rowSplit[0]) !== -1) {
         // header/unused lines
         return
       }
 
       if (rowSplit[0].slice(1).startsWith('SVC') || rowSplit[0].slice(1).startsWith('OFFC')) {
         // beginning of a new employee
-        if (currEmpID !== null) {
-          // close out end-of-day of previous employee
-          currOutTime = prevRowSplit[1]
-
-          outputData = appendOutputData(outputData, currEmpID,
-                                        currInDate, currInTime,
-                                        currOutTime)
-
-          // start entry for this row
-          currOutTime = null
-        }
+        currOutTime = null
         currEmpID = rowSplit[1]
         // cannot count from start since employees have variable number of spaces
         currInDate = rowSplit[rowSplit.length - 3]
@@ -165,7 +163,7 @@ function App() {
           <div style={{whiteSpace: 'pre', textAlign: 'left'}}>{outputCss()}</div>
         </div>
       }
-      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.21</span>
+      <span style={{position: "fixed", bottom: "0px", right: "0px"}}>version: 2023.03.24</span>
 
     </div>
   );
